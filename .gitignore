@@ -1,0 +1,8 @@
+# Ignore everything under data/
+data/*
+notebooks/data/*
+notebooks/khmer_trocr_model/*
+notebooks/outputs/
+# But keep placeholder files so the folders exist in git
+!data/**/.gitkeep
+
