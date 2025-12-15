@@ -1,5 +1,7 @@
+import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -28,7 +30,21 @@ CSV_PATH = PROJECT_ROOT / "data" / "dataset" / "labels.csv"
 MODEL_NAME = "microsoft/trocr-small-handwritten"
 TOKENIZER_NAME = "xlm-roberta-base"
 
-def train():
+def parse_args() -> argparse.Namespace:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Train Khmer TrOCR model.")
+    # Kept for compatibility; defaults log to runs/train_latest.json
+    parser.add_argument(
+        "--log-file",
+        type=Path,
+        default=PROJECT_ROOT / "runs" / "train_latest.json",
+        help="Where to store training summary metrics.",
+    )
+    return parser.parse_args()
+
+
+def train(args: argparse.Namespace):
     # 1. Load Data
     df = pd.read_csv(CSV_PATH)
     df = df[df['text'].notna()]
@@ -87,11 +103,31 @@ def train():
         compute_metrics=build_compute_metrics(processor),
     )
 
-    trainer.train()
+    train_output = trainer.train()
     
     # Save
     model.save_pretrained("../khmer_trocr_model")
     processor.save_pretrained("../khmer_trocr_model")
 
+    # Log summary to a timestamped file and latest
+    summary = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "train_samples": len(train_dataset),
+        "eval_samples": len(val_dataset),
+        "best_model_checkpoint": trainer.state.best_model_checkpoint,
+        "best_metric": trainer.state.best_metric,
+        "metric_for_best_model": training_args.metric_for_best_model,
+        "train_metrics": train_output.metrics,
+    }
+    runs_dir = args.log_file.parent
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    ts_name = runs_dir / f"train_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    with ts_name.open("w", encoding="utf-8") as f:
+        json.dump(summary, f, ensure_ascii=False, indent=2)
+    with args.log_file.open("w", encoding="utf-8") as f:
+        json.dump(summary, f, ensure_ascii=False, indent=2)
+    print(f"Saved training summary to {ts_name} and {args.log_file}")
+
 if __name__ == "__main__":
-    train()
+    args = parse_args()
+    train(args)

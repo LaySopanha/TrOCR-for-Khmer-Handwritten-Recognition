@@ -1,9 +1,11 @@
+import csv 
 import json
 import os
+import unicodedata
+
 import numpy as np
 from PIL import Image, ImageDraw
 from tqdm import tqdm
-import csv 
 
 # configurations
 JSON_PATH = "../data/annotation/annotated_data.json"
@@ -11,6 +13,16 @@ SOURCE_IMG_DIR = "../data/image/"
 OUTPUT_DIR = "../data/dataset"
 CROPS_DIR = os.path.join(OUTPUT_DIR, "crops")
 CSV_PATH = os.path.join(OUTPUT_DIR, "labels.csv")
+
+
+def normalize_text(text: str) -> str:
+    """Basic Khmer label normalization."""
+    if text is None:
+        return ""
+    text = unicodedata.normalize("NFC", text)
+    for ch in ["\u200b", "\u200c", "\u200d", "\ufeff"]:
+        text = text.replace(ch, "")
+    return text.strip()
 
 def preprocess_data():
     os.makedirs(CROPS_DIR, exist_ok=True)
@@ -54,7 +66,9 @@ def preprocess_data():
 
                 if result_type == 'textarea':
                     if 'text' in result['value'] and len(result['value']['text']) > 0:
-                        id_to_text[result_id] = result['value']['text'][0]
+                        cleaned = normalize_text(result['value']['text'][0])
+                        if cleaned:
+                            id_to_text[result_id] = cleaned
                 elif result_type == 'polygonlabels' or result_type == 'rectanglelabels':
                     id_to_point[result_id] = result['value']['points']
         

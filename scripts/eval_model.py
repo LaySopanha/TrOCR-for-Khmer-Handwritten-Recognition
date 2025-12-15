@@ -11,8 +11,10 @@ python scripts/eval_model.py \
 """
 
 import argparse
+import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -44,6 +46,17 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=0,
         help="Limit evaluation to N samples (0 = use all).",
+    )
+    parser.add_argument(
+        "--save-metrics",
+        type=Path,
+        default=PROJECT_ROOT / "runs" / "eval_latest.json",
+        help="Where to save eval metrics (default saves to runs/eval_latest.json).",
+    )
+    parser.add_argument(
+        "--no-save",
+        action="store_true",
+        help="Skip writing metrics to disk.",
     )
     return parser.parse_args()
 
@@ -87,6 +100,24 @@ def main() -> None:
 
     metrics = trainer.evaluate()
     print(metrics)
+
+    if not args.no_save and args.save_metrics:
+        payload = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "model_dir": str(args.model_dir),
+            "csv": str(args.csv),
+            "data_root": str(args.data_root),
+            "max_samples": args.max_samples,
+            "metrics": metrics,
+            "num_samples": len(dataset),
+        }
+        args.save_metrics.parent.mkdir(parents=True, exist_ok=True)
+        ts_name = args.save_metrics.parent / f"eval_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        with ts_name.open("w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+        with args.save_metrics.open("w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+        print(f"Saved metrics to {ts_name} and {args.save_metrics}")
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ data/dataset/labels.csv while saving crops to data/dataset/crops/.
 import argparse
 import csv
 import json
+import unicodedata
 from pathlib import Path
 from typing import Iterable, List, Tuple
 
@@ -41,6 +42,17 @@ def normalize_polygon(shape: dict) -> List[Tuple[float, float]]:
 
     # Treat everything else as polygon
     return [(float(x), float(y)) for x, y in points]
+
+
+def normalize_text(text: str) -> str:
+    """Apply basic normalization for Khmer labels."""
+    if text is None:
+        return ""
+    text = unicodedata.normalize("NFC", text)
+    # Remove zero-width and similar artifacts
+    for ch in ["\u200b", "\u200c", "\u200d", "\ufeff"]:
+        text = text.replace(ch, "")
+    return text.strip()
 
 
 def crop_and_mask(
@@ -97,7 +109,8 @@ def process_labelme_file(
 
     rows: List[Tuple[str, str]] = []
     for idx, shape in enumerate(data.get("shapes", [])):
-        text = (shape.get("label") or "").strip()
+        raw_text = shape.get("label") or ""
+        text = normalize_text(raw_text)
         if not text:
             continue
 
