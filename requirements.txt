@@ -15,6 +15,7 @@ datasets==4.4.1
 debugpy @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_debugpy_1764921229/work
 decorator @ file:///home/conda/feedstock_root/build_artifacts/decorator_1740384970518/work
 dill==0.4.0
+evaluate==0.4.6
 exceptiongroup @ file:///home/conda/feedstock_root/build_artifacts/exceptiongroup_1763918002538/work
 executing @ file:///home/conda/feedstock_root/build_artifacts/executing_1756729339227/work
 filelock==3.20.0
@@ -32,6 +33,7 @@ ipython @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_ip
 jedi @ file:///home/conda/feedstock_root/build_artifacts/jedi_1733300866624/work
 Jinja2==3.1.6
 jiwer==4.0.0
+joblib==1.5.2
 jupyter_client @ file:///home/conda/feedstock_root/build_artifacts/jupyter_client_1733440914442/work
 jupyter_core @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_jupyter_core_1760643864/work
 MarkupSafe==3.0.3
@@ -80,12 +82,17 @@ RapidFuzz==3.14.3
 regex==2025.11.3
 requests==2.32.5
 safetensors==0.7.0
+scikit-learn==1.7.2
+scipy==1.15.3
 sentencepiece==0.2.1
 six @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_six_1753199211/work
 stack_data @ file:///home/conda/feedstock_root/build_artifacts/stack_data_1733569443808/work
 sympy==1.14.0
+threadpoolctl==3.6.0
 tokenizers==0.22.1
 torch==2.9.1
+torchaudio==2.9.1+cpu
+torchvision==0.24.1+cpu
 tornado @ file:///home/conda/feedstock_root/build_artifacts/tornado_1762506714284/work
 tqdm==4.67.1
 traitlets @ file:///home/conda/feedstock_root/build_artifacts/traitlets_1733367359838/work

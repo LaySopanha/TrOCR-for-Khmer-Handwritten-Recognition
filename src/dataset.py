@@ -1,3 +1,10 @@
+import os
+
+import torch
+from PIL import Image
+from torch.utils.data import Dataset
+
+
 class KhmerOCRDataset(Dataset):
     def __init__(self, root_dir,  df, processor, max_target_length=128):
         self.root_dir = root_dir
