@@ -1,6 +1,8 @@
+import argparse
 import json
 import os
 import sys
+import csv
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -42,7 +44,6 @@ def parse_args() -> argparse.Namespace:
         help="Where to store training summary metrics.",
     )
     return parser.parse_args()
-
 
 def train(args: argparse.Namespace):
     # 1. Load Data
@@ -127,6 +128,33 @@ def train(args: argparse.Namespace):
     with args.log_file.open("w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
     print(f"Saved training summary to {ts_name} and {args.log_file}")
+
+    # Append a lightweight CSV row for quick history
+    csv_path = runs_dir / "train_history.csv"
+    csv_exists = csv_path.exists()
+    with csv_path.open("a", encoding="utf-8", newline="") as f:
+        writer = csv.writer(f)
+        if not csv_exists:
+            writer.writerow(
+                [
+                    "timestamp",
+                    "train_samples",
+                    "eval_samples",
+                    "metric_for_best_model",
+                    "best_metric",
+                    "best_model_checkpoint",
+                ]
+            )
+        writer.writerow(
+            [
+                summary["timestamp"],
+                summary["train_samples"],
+                summary["eval_samples"],
+                summary["metric_for_best_model"],
+                summary["best_metric"],
+                summary["best_model_checkpoint"],
+            ]
+        )
 
 if __name__ == "__main__":
     args = parse_args()

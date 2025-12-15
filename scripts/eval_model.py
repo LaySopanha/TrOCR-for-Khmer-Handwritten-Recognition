@@ -11,6 +11,7 @@ python scripts/eval_model.py \
 """
 
 import argparse
+import csv
 import json
 import os
 import sys
@@ -118,6 +119,35 @@ def main() -> None:
         with args.save_metrics.open("w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
         print(f"Saved metrics to {ts_name} and {args.save_metrics}")
+
+        # Also append a lightweight CSV row
+        csv_path = args.save_metrics.parent / "eval_history.csv"
+        csv_exists = csv_path.exists()
+        with csv_path.open("a", encoding="utf-8", newline="") as f:
+            writer = csv.writer(f)
+            if not csv_exists:
+                writer.writerow(
+                    [
+                        "timestamp",
+                        "model_dir",
+                        "csv",
+                        "data_root",
+                        "num_samples",
+                        "max_samples",
+                        "cer",
+                    ]
+                )
+            writer.writerow(
+                [
+                    payload["timestamp"],
+                    payload["model_dir"],
+                    payload["csv"],
+                    payload["data_root"],
+                    payload["num_samples"],
+                    payload["max_samples"],
+                    payload["metrics"].get("eval_cer"),
+                ]
+            )
 
 
 if __name__ == "__main__":
