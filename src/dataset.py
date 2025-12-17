@@ -6,11 +6,12 @@ from torch.utils.data import Dataset
 
 
 class KhmerOCRDataset(Dataset):
-    def __init__(self, root_dir,  df, processor, max_target_length=128):
+    def __init__(self, root_dir,  df, processor, max_target_length=128, transform=None):
         self.root_dir = root_dir
         self.df = df 
         self.processor = processor
         self.max_target_length = max_target_length
+        self.transform = transform
     
     def __len__(self):
         return len(self.df)
@@ -20,6 +21,8 @@ class KhmerOCRDataset(Dataset):
         image_path = os.path.join(self.root_dir, file_name)
         
         image = Image.open(image_path).convert("RGB")
+        if self.transform:
+            image = self.transform(image)
         pixel_values = self.processor(image, return_tensors="pt").pixel_values
 
         labels = self.processor.tokenizer(

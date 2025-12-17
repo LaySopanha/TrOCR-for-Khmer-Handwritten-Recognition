@@ -4,6 +4,8 @@ notebooks/data/*
 notebooks/khmer_trocr_model/*
 notebooks/outputs/
 khmer_tokenizer/
+outputs/
+khmer_trocr_model/
 
 # Ignore Python cache
 __pycache__/
@@ -12,4 +14,6 @@ __pycache__/
 
 # But keep placeholder files so the folders exist in git
 !data/**/.gitkeep
+!outputs/.gitkeep
+!khmer_trocr_model/.gitkeep
 

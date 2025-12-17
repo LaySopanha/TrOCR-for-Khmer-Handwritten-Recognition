@@ -39,7 +39,19 @@ from src.metrics import build_compute_metrics  # noqa: E402
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Evaluate a trained TrOCR model on labeled crops.")
     parser.add_argument("--model-dir", type=Path, default=PROJECT_ROOT / "khmer_trocr_model")
-    parser.add_argument("--csv", type=Path, default=PROJECT_ROOT / "data/dataset/labels.csv")
+    parser.add_argument(
+        "--processor-dir",
+        type=Path,
+        default=None,
+        help="Path to processor (defaults to model-dir if not set).",
+    )
+    parser.add_argument(
+        "--tokenizer-dir",
+        type=Path,
+        default=None,
+        help="Path to tokenizer (defaults to processor-dir/model-dir if not set).",
+    )
+    parser.add_argument("--csv", type=Path, default=PROJECT_ROOT / "data/dataset/test.csv")
     parser.add_argument("--data-root", type=Path, default=PROJECT_ROOT / "data/dataset/crops")
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument(
@@ -47,6 +59,29 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=0,
         help="Limit evaluation to N samples (0 = use all).",
+    )
+    parser.add_argument(
+        "--num-beams",
+        type=int,
+        default=None,
+        help="Override num_beams for generation (e.g., 1 for greedy).",
+    )
+    parser.add_argument(
+        "--length-penalty",
+        type=float,
+        default=None,
+        help="Override length_penalty for generation.",
+    )
+    parser.add_argument(
+        "--no-repeat-ngram-size",
+        type=int,
+        default=None,
+        help="Override no_repeat_ngram_size for generation.",
+    )
+    parser.add_argument(
+        "--greedy",
+        action="store_true",
+        help="Shortcut for greedy decoding (num_beams=1, length_penalty=1.0, no_repeat_ngram_size=0).",
     )
     parser.add_argument(
         "--save-metrics",
@@ -70,8 +105,11 @@ def main() -> None:
     if args.max_samples and len(df) > args.max_samples:
         df = df.sample(args.max_samples, random_state=42).reset_index(drop=True)
 
-    processor = TrOCRProcessor.from_pretrained(args.model_dir)
-    tokenizer = AutoTokenizer.from_pretrained(args.model_dir)
+    proc_path = args.processor_dir or args.model_dir
+    tok_path = args.tokenizer_dir or proc_path
+
+    processor = TrOCRProcessor.from_pretrained(proc_path)
+    tokenizer = AutoTokenizer.from_pretrained(tok_path)
     processor.tokenizer = tokenizer
 
     dataset = KhmerOCRDataset(args.data_root, df, processor)
@@ -79,6 +117,17 @@ def main() -> None:
         dataset = Subset(dataset, range(args.max_samples))
 
     model = VisionEncoderDecoderModel.from_pretrained(args.model_dir)
+    # Optional decoding overrides
+    if args.greedy:
+        model.config.num_beams = 1
+        model.config.length_penalty = 1.0
+        model.config.no_repeat_ngram_size = 0
+    if args.num_beams is not None:
+        model.config.num_beams = args.num_beams
+    if args.length_penalty is not None:
+        model.config.length_penalty = args.length_penalty
+    if args.no_repeat_ngram_size is not None:
+        model.config.no_repeat_ngram_size = args.no_repeat_ngram_size
 
     training_args = Seq2SeqTrainingArguments(
         output_dir=os.path.join(args.model_dir, "eval_tmp"),
@@ -92,7 +141,7 @@ def main() -> None:
 
     trainer = Seq2SeqTrainer(
         model=model,
-        tokenizer=processor.feature_extractor,
+        processing_class=processor,
         args=training_args,
         eval_dataset=dataset,
         data_collator=default_data_collator,

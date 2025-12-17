@@ -105,3 +105,5 @@ wcwidth @ file:///home/conda/feedstock_root/build_artifacts/wcwidth_175862227960
 xxhash==3.6.0
 yarl==1.22.0
 zipp @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_zipp_1764460141/work
+gradio==4.44.0
+pytesseract==0.3.13
