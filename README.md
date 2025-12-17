@@ -32,6 +32,8 @@ A specific-domain OCR project aiming to digitize **Khmer handwritten text lines*
 
 The dataset consists of **~3.9k cropped line images** sourced from Label Studio exports and LabelMe annotations.
 
+> **Dataset location:** Data is hosted separately at [LaySopanha/Khmer-Handwritten-Dataset](https://github.com/LaySopanha/Khmer-Handwritten-Dataset). Clone/download it and place contents under `data/` (e.g., `data/dataset/` for crops and CSV splits).
+
 | Split | Count | Source File | Description |
 | :--- | :--- | :--- | :--- |
 | **Train** | 3,132 | `train.csv` | Augmented during training |
@@ -78,8 +80,8 @@ We utilize the **Microsoft TrOCR** (Transformer-based Optical Character Recognit
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/khmer-trocr.git
-cd khmer-trocr
+git clone https://github.com/LaySopanha/TrOCR-for-Khmer-Handwritten-Recognition
+cd TrOCR-for-Khmer-Handwritten-Recognition
 pip install -r requirements.txt
 ```
 
